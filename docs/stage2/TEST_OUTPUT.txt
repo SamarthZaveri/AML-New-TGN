@@ -1,0 +1,93 @@
+test_dataset_sorted_precise_and_unknown_chain_labels (test_stage2_v3.DataTests.test_dataset_sorted_precise_and_unknown_chain_labels) ... Validating dataset identity (SHA-256 of input files)...
+Accounts: 80; positives: 40; train/val/test: 56/12/12
+Chain labels: 4 known, 76 unknown; binary task: True
+Events: 160; span: 0.00 hours; verify source timestamps are seconds
+Validating dataset identity (SHA-256 of input files)...
+Accounts: 80; positives: 40; train/val/test: 56/12/12
+Chain labels: 4 known, 76 unknown; binary task: True
+Events: 160; span: 0.00 hours; verify source timestamps are seconds
+Validating dataset identity (SHA-256 of input files)...
+ok
+test_directory_hash_is_location_independent_and_sensitive (test_stage2_v3.DataTests.test_directory_hash_is_location_independent_and_sensitive) ... ok
+test_reject_multiple_ownership (test_stage2_v3.DataTests.test_reject_multiple_ownership) ... Validating dataset identity (SHA-256 of input files)...
+Accounts: 80; positives: 40; train/val/test: 56/12/12
+Chain labels: 4 known, 76 unknown; binary task: True
+Events: 160; span: 0.00 hours; verify source timestamps are seconds
+Validating dataset identity (SHA-256 of input files)...
+ok
+test_spark_parquet_directories_for_all_inputs (test_stage2_v3.DataTests.test_spark_parquet_directories_for_all_inputs) ... Accounts: 80; positives: 40; train/val/test: 56/12/12
+Validating dataset identity (SHA-256 of input files)...
+Accounts: 80; positives: 40; train/val/test: 56/12/12
+Chain labels: 4 known, 76 unknown; binary task: True
+Events: 160; span: 0.00 hours; verify source timestamps are seconds
+Validating dataset identity (SHA-256 of input files)...
+ok
+test_training_only_normalization_and_roundtrip (test_stage2_v3.DataTests.test_training_only_normalization_and_roundtrip) ... ok
+test_validation_threshold_and_metrics (test_stage2_v3.DataTests.test_validation_threshold_and_metrics) ... ok
+test_all_backbone_gradient_paths_and_multiple_steps (test_stage2_v3.ModelTests.test_all_backbone_gradient_paths_and_multiple_steps) ... ok
+test_conservation_decays_both_sides (test_stage2_v3.ModelTests.test_conservation_decays_both_sides) ... ok
+test_first_seen_and_prior_counts (test_stage2_v3.ModelTests.test_first_seen_and_prior_counts) ... ok
+test_masked_attention_finite_gradients (test_stage2_v3.ModelTests.test_masked_attention_finite_gradients) ... ok
+test_neighbor_overflow_both_directions_and_restore (test_stage2_v3.ModelTests.test_neighbor_overflow_both_directions_and_restore) ... ok
+test_readout_matches_forward_at_same_cutoff (test_stage2_v3.ModelTests.test_readout_matches_forward_at_same_cutoff) ... ok
+test_training_can_overfit_small_fixture (test_stage2_v3.ModelTests.test_training_can_overfit_small_fixture) ... ok
+test_atomic_failure_preserves_previous_checkpoint (test_stage2_v3.RecoveryTests.test_atomic_failure_preserves_previous_checkpoint) ... ok
+test_checkpoint_guards (test_stage2_v3.RecoveryTests.test_checkpoint_guards) ... ok
+test_interrupted_training_matches_uninterrupted (test_stage2_v3.RecoveryTests.test_interrupted_training_matches_uninterrupted) ... Accounts: 80; positives: 40; train/val/test: 56/12/12
+Chain labels: 4 known, 76 unknown; binary task: True
+Events: 160; span: 0.00 hours; verify source timestamps are seconds
+Validating dataset identity (SHA-256 of input files)...
+Accounts: 80; positives: 40; train/val/test: 56/12/12
+Chain labels: 4 known, 76 unknown; binary task: True
+Events: 160; span: 0.00 hours; verify source timestamps are seconds
+Training-account pos_weight: 1.000
+    Saved recovery checkpoint: epoch 1, next batch 1
+    Saved recovery checkpoint: epoch 1, next batch 6
+Epoch 1 validation @0.5: AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.50000
+Epoch 1 validation tuned: AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.53020
+Epoch 1 train: AP=0.31570 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.53020
+    Saved recovery checkpoint: epoch 2, next batch 1
+    Saved recovery checkpoint: epoch 2, next batch 6
+Epoch 2 validation @0.5: AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.50000
+Epoch 2 validation tuned: AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.53009
+Epoch 2 train: AP=0.31570 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.53009
+    Saved recovery checkpoint: epoch 3, next batch 1
+Seed 42 TEST (frozen validation threshold): AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.53020
+Training-account pos_weight: 1.000
+    Saved recovery checkpoint: epoch 1, next batch 1
+    Saved recovery checkpoint: epoch 1, next batch 3
+Training-account pos_weight: 1.000
+Resumed seed 42: epoch 1, next batch 3
+    Saved recovery checkpoint: epoch 1, next batch 6
+Epoch 1 validation @0.5: AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.50000
+Epoch 1 validation tuned: AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.53020
+Epoch 1 train: AP=0.31570 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.53020
+    Saved recovery checkpoint: epoch 2, next batch 1
+    Saved recovery checkpoint: epoch 2, next batch 6
+Epoch 2 validation @0.5: AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.50000
+Epoch 2 validation tuned: AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.53009
+Epoch 2 train: AP=0.31570 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.53009
+    Saved recovery checkpoint: epoch 3, next batch 1
+ok
+test_replay_interruption_keeps_training_checkpoint (test_stage2_v3.RecoveryTests.test_replay_interruption_keeps_training_checkpoint) ... Seed 42 TEST (frozen validation threshold): AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.53020
+Validating dataset identity (SHA-256 of input files)...
+Accounts: 80; positives: 40; train/val/test: 56/12/12
+Chain labels: 4 known, 76 unknown; binary task: True
+Events: 160; span: 0.00 hours; verify source timestamps are seconds
+Training-account pos_weight: 1.000
+    Saved recovery checkpoint: epoch 1, next batch 1
+    Saved recovery checkpoint: epoch 1, next batch 6
+Training-account pos_weight: 1.000
+Resumed seed 42: epoch 1, next batch 6
+    Saved recovery checkpoint: epoch 1, next batch 6
+Epoch 1 validation @0.5: AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.50000
+Epoch 1 validation tuned: AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.52987
+Epoch 1 train: AP=0.31570 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.52987
+    Saved recovery checkpoint: epoch 2, next batch 1
+ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 2.992s
+
+OK
+Seed 42 TEST (frozen validation threshold): AP=0.34679 F1=0.66667 precision=0.50000 recall=1.00000 predicted_positive=100.000% threshold=0.52987

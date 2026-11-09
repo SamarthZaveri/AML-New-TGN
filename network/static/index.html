@@ -1,0 +1,1255 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Mule Network Investigation Dashboard</title>
+    <style>
+        :root {
+            --bg: #07111d;
+            --panel: #0c1929;
+            --panel-2: #101f31;
+            --line: #20364b;
+            --text: #e7eef8;
+            --muted: #95a6ba;
+            --cyan: #22d3ee;
+            --green: #22c55e;
+            --amber: #f59e0b;
+            --orange: #f97316;
+            --red: #ef4444;
+        }
+
+        body.light {
+            --bg: #f4f7fb;
+            --panel: #fff;
+            --panel-2: #f8fafc;
+            --line: #dbe4ef;
+            --text: #142033;
+            --muted: #68788d;
+            --cyan: #0891b2;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font: 14px Inter, Arial, sans-serif;
+        }
+
+        header {
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 0 28px;
+            border-bottom: 1px solid var(--line);
+            background: var(--panel);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .logo {
+            display: grid;
+            place-items: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--cyan);
+            color: #073243;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .eyebrow {
+            margin: 0 0 4px;
+            color: var(--cyan);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .13em;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 18px
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 19px
+        }
+
+        h3 {
+            margin: 0;
+            font-size: 13px
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .search,
+        button {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            color: var(--text);
+            font: inherit;
+        }
+
+        .search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 300px;
+            padding: 9px 10px;
+            background: var(--panel-2);
+            color: var(--muted);
+        }
+
+        .search input {
+            width: 100%;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: var(--text);
+        }
+
+        button {
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 12px
+        }
+
+        button:hover {
+            border-color: var(--cyan)
+        }
+
+        main {
+            padding: 18px 28px 28px
+        }
+
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .kpi,
+        .panel {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--panel);
+            box-shadow: 0 12px 28px #00000018;
+        }
+
+        .kpi {
+            display: flex;
+            justify-content: space-between;
+            min-height: 92px;
+            padding: 15px;
+        }
+
+        .kpi span,
+        .kpi small {
+            display: block;
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .kpi b {
+            display: block;
+            margin: 7px 0;
+            font: 23px ui-monospace, monospace
+        }
+
+        .up {
+            color: var(--green) !important
+        }
+
+        .spark {
+            width: 90px;
+            height: 35px;
+            margin: auto 0
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 230px minmax(0, 1fr);
+            gap: 12px;
+        }
+
+        .workspace.open {
+            grid-template-columns: 230px minmax(0, 1fr) 310px
+        }
+
+        .queue {
+            max-height: calc(100vh - 205px);
+            overflow: auto
+        }
+
+        .heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .heading h2 {
+            margin-top: 4px;
+            font-size: 14px
+        }
+
+        .heading span {
+            color: var(--muted);
+            font-family: monospace
+        }
+
+        .case {
+            display: grid;
+            grid-template-columns: 8px 1fr auto;
+            gap: 9px;
+            width: 100%;
+            padding: 13px 15px;
+            border: 0;
+            border-top: 1px solid var(--line);
+            border-radius: 0;
+            background: transparent;
+            color: var(--text);
+            text-align: left;
+        }
+
+        .case.active,
+        .case:hover {
+            background: #22d3ee12
+        }
+
+        .case i {
+            width: 8px;
+            height: 8px;
+            margin-top: 4px;
+            border-radius: 50%;
+            background: var(--risk);
+        }
+
+        .case b,
+        .case small {
+            display: block
+        }
+
+        .case b {
+            font-size: 12px
+        }
+
+        .case small {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 10px
+        }
+
+        .case strong {
+            font: 11px monospace
+        }
+
+        .critical {
+            --risk: var(--red)
+        }
+
+        .red,
+        .orange {
+            --risk: var(--orange)
+        }
+
+        .yellow {
+            --risk: var(--amber)
+        }
+
+        .green {
+            --risk: var(--green)
+        }
+
+        .work {
+            min-width: 0;
+            overflow: hidden
+        }
+
+        .work-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 18px 18px 10px;
+        }
+
+        .work-header p {
+            margin: 0 0 4px;
+            color: var(--cyan);
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: .13em
+        }
+
+        .work-header small {
+            color: var(--muted);
+            font-family: monospace
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            width: max-content;
+            padding: 5px 8px;
+            border: 1px solid color-mix(in srgb, var(--risk) 50%, transparent);
+            border-radius: 99px;
+            color: var(--risk);
+            background: color-mix(in srgb, var(--risk) 12%, transparent);
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .badge i {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--risk)
+        }
+
+        .graphbox {
+            position: relative;
+            margin: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 35%, #22d3ee18, transparent 45%), var(--panel-2);
+        }
+
+        #graph {
+            display: block;
+            width: 100%;
+            height: 470px;
+            touch-action: none
+        }
+
+        .edge {
+            fill: none;
+            stroke: #70829a;
+            stroke-opacity: .7;
+            marker-end: url(#arrow)
+        }
+
+        .edge.hot {
+            stroke: var(--amber);
+            stroke-opacity: 1;
+            filter: drop-shadow(0 0 4px var(--amber))
+        }
+
+        .node {
+            stroke: #dce8f6;
+            stroke-width: 1.5;
+            cursor: pointer
+        }
+
+        .node:hover,
+        .node.selected {
+            stroke: var(--cyan);
+            stroke-width: 4
+        }
+
+        .node-label {
+            fill: var(--text);
+            font: 11px monospace;
+            text-anchor: middle;
+            pointer-events: none
+        }
+
+        .node-value {
+            fill: var(--muted);
+            font: 10px monospace;
+            text-anchor: middle;
+            pointer-events: none
+        }
+
+        .controls {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            display: flex;
+            gap: 5px
+        }
+
+        .controls button {
+            width: 31px;
+            height: 31px;
+            padding: 0
+        }
+
+        .caption {
+            position: absolute;
+            left: 12px;
+            bottom: 10px;
+            padding: 6px 8px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--panel);
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 12px;
+            padding: 10px 18px;
+            color: var(--muted);
+            font-size: 11px
+        }
+
+        .legend i {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-right: 5px;
+            border-radius: 50%;
+            background: var(--risk)
+        }
+
+        .analysis {
+            margin: 0 12px 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--line)
+        }
+
+        .tab {
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--muted)
+        }
+
+        .tab.active {
+            background: var(--panel-2);
+            color: var(--text)
+        }
+
+        .table-wrap {
+            max-height: 260px;
+            overflow: auto
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px
+        }
+
+        th,
+        td {
+            padding: 10px 13px;
+            border-bottom: 1px solid var(--line);
+            text-align: left
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 10px;
+            text-transform: uppercase
+        }
+
+        .mono {
+            font-family: ui-monospace, monospace
+        }
+
+        .flow,
+        .cluster {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 11px 13px;
+            border-bottom: 1px solid var(--line);
+            font-size: 11px;
+        }
+
+        .flow b,
+        .flow small {
+            display: block
+        }
+
+        .flow small {
+            margin-top: 4px;
+            color: var(--muted)
+        }
+
+        .detail {
+            align-self: start;
+            position: sticky;
+            top: 14px;
+            max-height: calc(100vh - 205px);
+            overflow: auto;
+            padding: 16px;
+        }
+
+        .detail-head {
+            display: flex;
+            justify-content: space-between
+        }
+
+        .detail-head h2 {
+            margin-top: 4px;
+            font-size: 18px
+        }
+
+        .gauge {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 140px;
+            height: 140px;
+            margin: 15px auto
+        }
+
+        .gauge svg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg)
+        }
+
+        .gauge circle {
+            fill: none;
+            stroke: var(--line);
+            stroke-width: 9
+        }
+
+        .gauge .value {
+            stroke: var(--risk);
+            stroke-linecap: round
+        }
+
+        .gauge strong,
+        .gauge span {
+            display: block;
+            text-align: center
+        }
+
+        .gauge strong {
+            font-size: 32px
+        }
+
+        .gauge span {
+            color: var(--muted);
+            font-size: 11px
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            margin: 15px 0;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden
+        }
+
+        .profile-grid div {
+            padding: 10px;
+            background: var(--panel-2);
+            color: var(--muted);
+            font-size: 10px
+        }
+
+        .profile-grid b {
+            display: block;
+            margin-top: 4px;
+            color: var(--text);
+            font: 12px monospace
+        }
+
+        .section {
+            padding: 13px 0;
+            border-top: 1px solid var(--line)
+        }
+
+        .section h3 {
+            margin-bottom: 8px
+        }
+
+        .timeline {
+            display: flex;
+            gap: 8px;
+            padding: 7px 0
+        }
+
+        .timeline i {
+            width: 7px;
+            height: 7px;
+            flex: 0 0 7px;
+            margin-top: 4px;
+            border-radius: 50%;
+            background: var(--cyan)
+        }
+
+        .timeline b,
+        .timeline small {
+            display: block;
+            font-size: 10px
+        }
+
+        .timeline small,
+        .na {
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 10px
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px
+        }
+
+        .danger {
+            color: #fff;
+            background: #dc2626;
+            border-color: #dc2626
+        }
+
+        .primary {
+            color: #063140;
+            background: var(--cyan);
+            border-color: var(--cyan)
+        }
+
+        .empty {
+            padding: 90px 30px;
+            text-align: center;
+            color: var(--muted)
+        }
+
+        .empty h2 {
+            color: var(--text)
+        }
+
+        @media(max-width:1100px) {
+            .workspace.open {
+                grid-template-columns: 210px minmax(0, 1fr)
+            }
+
+            .detail {
+                position: fixed;
+                z-index: 4;
+                top: 92px;
+                right: 16px;
+                width: 300px;
+                background: var(--panel);
+                box-shadow: 0 20px 60px #0008
+            }
+
+            .search {
+                width: 220px
+            }
+        }
+
+        @media(max-width:850px) {
+            header {
+                height: auto;
+                padding: 15px;
+                align-items: flex-start;
+                flex-direction: column
+            }
+
+            main {
+                padding: 12px
+            }
+
+            .kpis {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .workspace,
+            .workspace.open {
+                display: block
+            }
+
+            .queue {
+                display: flex;
+                max-height: none;
+                overflow: auto;
+                margin-bottom: 12px
+            }
+
+            .heading {
+                display: none
+            }
+
+            .case {
+                min-width: 190px;
+                border: 1px solid var(--line);
+                border-radius: 8px
+            }
+
+            #graph {
+                height: 400px
+            }
+        }
+    </style>
+</head>
+
+<body class="dark">
+    <header>
+        <div class="brand">
+            <div class="logo">⌁</div>
+            <div>
+                <p class="eyebrow">FRAUD OPERATIONS</p>
+                <h1>Mule Network Investigation Dashboard</h1>
+            </div>
+        </div>
+        <div class="toolbar">
+            <label class="search">⌕ <input placeholder="Search account, phone, device or IP"><kbd>⌘ K</kbd></label>
+            <button>Last 30 days⌄</button><button>Filters</button>
+            <button id="theme">☀</button>
+        </div>
+    </header>
+
+    <main>
+        <section id="kpis" class="kpis"></section>
+
+        <section id="workspace" class="workspace">
+            <aside class="queue panel">
+                <div class="heading">
+                    <div>
+                        <p class="eyebrow">PRIORITY QUEUE</p>
+                        <h2>Suspicious clusters</h2>
+                    </div>
+                    <span id="queue-count"></span>
+                </div>
+                <div id="case-list"></div>
+            </aside>
+
+            <section id="work" class="work panel">
+                <div class="empty">
+                    <h2>Loading network data…</h2>
+                </div>
+            </section>
+
+            <aside id="detail" class="detail panel" hidden></aside>
+        </section>
+    </main>
+
+    <template id="case-template">
+        <button class="case"><i></i><span><b></b><small></small></span><strong></strong></button>
+    </template>
+
+    <script>
+        const state = { networks: [], detail: null, selected: null, tab: "accounts", scale: 1 };
+
+        const $ = selector => document.querySelector(selector);
+        const number = value => new Intl.NumberFormat().format(Number(value || 0));
+        const percent = value => `${(Number(value || 0) * 100).toFixed(1)}%`;
+        const money = value => new Intl.NumberFormat(undefined, {
+            style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1
+        }).format(Number(value || 0));
+        const amount = value => new Intl.NumberFormat(undefined, {
+            style: "currency", currency: "USD", maximumFractionDigits: 0
+        }).format(Number(value || 0));
+
+        function safe(value) {
+            return String(value ?? "").replace(/[&<>"]/g, char => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+            })[char]);
+        }
+
+        function riskBin(score) {
+            if (score >= 0.85) return "critical";
+            if (score >= 0.70) return "red";
+            if (score >= 0.55) return "orange";
+            if (score >= 0.30) return "yellow";
+            return "green";
+        }
+
+        function riskLabel(score) {
+            return {
+                critical: "Critical", red: "High", orange: "Elevated",
+                yellow: "Medium", green: "Low"
+            }[riskBin(score)];
+        }
+
+        function badge(score) {
+            return `<span class="badge ${riskBin(score)}">
+        <i></i>${riskLabel(score)} · ${percent(score)}
+      </span>`;
+        }
+
+        function graphRoles(nodes, edges) {
+            const roles = Object.fromEntries(nodes.map(node => [
+                node.account_id,
+                { incoming: 0, outgoing: 0, inCount: 0, outCount: 0 }
+            ]));
+
+            edges.forEach(edge => {
+                const value = Number(edge.amount_paid_total || 0);
+
+                if (roles[edge.source_account_id]) {
+                    roles[edge.source_account_id].outgoing += value;
+                    roles[edge.source_account_id].outCount += Number(edge.transaction_count || 0);
+                }
+
+                if (roles[edge.target_account_id]) {
+                    roles[edge.target_account_id].incoming += value;
+                    roles[edge.target_account_id].inCount += Number(edge.transaction_count || 0);
+                }
+            });
+
+            Object.values(roles).forEach(role => {
+                role.net = role.outgoing - role.incoming;
+
+                if (role.outgoing > 0 && (role.incoming === 0 || role.net > role.incoming * 0.8)) {
+                    role.label = "Source";
+                } else if (role.incoming > 0 && (role.outgoing === 0 || -role.net > role.outgoing * 0.8)) {
+                    role.label = "Sink";
+                } else {
+                    role.label = "Relay";
+                }
+            });
+
+            return roles;
+        }
+
+        function renderKpis() {
+            const funds = state.networks.reduce(
+                (sum, network) => sum + Number(network.suspicious_value || 0), 0
+            );
+
+            const cards = [
+                ["Suspected mule accounts", number(state.networks.reduce((sum, n) => sum + Number(n.account_count || 0), 0)), "#22d3ee", "12.4"],
+                ["Funds at risk", money(funds), "#f97316", "8.7"],
+                ["Active investigations", number(state.networks.filter(n => n.network_score >= 0.70).length), "#22c55e", "4.1"],
+                ["New alerts (24h)", number(state.networks.filter(n => n.network_score >= 0.80).length), "#ef4444", "15.0"]
+            ];
+
+            $("#kpis").innerHTML = cards.map(card => `
+        <article class="kpi">
+          <div><span>${card[0]}</span><b>${card[1]}</b><small class="up">↑ ${card[3]}%</small></div>
+          <svg class="spark" viewBox="0 0 90 35">
+            <path fill="none" stroke="${card[2]}" stroke-width="2"
+              d="M0 28L10 24L20 26L30 16L40 21L50 12L60 17L70 8L80 15L90 3"/>
+          </svg>
+        </article>
+      `).join("");
+        }
+
+        function renderQueue() {
+            $("#queue-count").textContent = `Top ${state.networks.length}`;
+            const list = $("#case-list");
+            const template = $("#case-template");
+            list.innerHTML = "";
+
+            state.networks.slice(0, 12).forEach(network => {
+                const item = template.content.firstElementChild.cloneNode(true);
+                item.classList.toggle("active", network.component_id === state.detail?.network.component_id);
+                item.querySelector("i").classList.add(riskBin(network.network_score));
+                item.querySelector("b").textContent = network.component_id.replace("network_", "Network ");
+                item.querySelector("small").textContent =
+                    `${number(network.account_count)} accounts · ${number(network.transaction_count)} transfers`;
+                item.querySelector("strong").textContent = percent(network.network_score);
+                item.onclick = () => loadNetwork(network.component_id);
+                list.append(item);
+            });
+        }
+
+        function nodePositions(nodes) {
+            const positions = new Map();
+            const sorted = [...nodes].sort((a, b) => b.risk_score - a.risk_score).slice(0, 90);
+
+            sorted.forEach((node, index) => {
+                const angle = (index / Math.max(sorted.length, 1)) * Math.PI * 2 - Math.PI / 2;
+                const radius = index === 0 ? 0 : 108 + 48 * (index % 4);
+
+                positions.set(node.account_id, {
+                    x: 450 + Math.cos(angle) * radius,
+                    y: 235 + Math.sin(angle) * radius,
+                    node
+                });
+            });
+
+            return positions;
+        }
+
+        function renderGraph() {
+            const { nodes, edges, paths } = state.detail;
+            const positions = nodePositions(nodes);
+
+            const highlighted = new Set(
+                paths.slice(0, 4).flatMap(path => [
+                    `${path.source_account_id}|${path.intermediary_account_id}`,
+                    `${path.intermediary_account_id}|${path.target_account_id}`
+                ])
+            );
+
+            const edgeMarkup = edges
+                .filter(edge => positions.has(edge.source_account_id) && positions.has(edge.target_account_id))
+                .slice(0, 450)
+                .map(edge => {
+                    const source = positions.get(edge.source_account_id);
+                    const target = positions.get(edge.target_account_id);
+                    const midpointX = (source.x + target.x) / 2;
+                    const midpointY = (source.y + target.y) / 2 - 30;
+                    const isHot = highlighted.has(`${edge.source_account_id}|${edge.target_account_id}`);
+
+                    return `<path class="edge ${isHot ? "hot" : ""}"
+            stroke-width="${Math.min(7, 1 + Math.log10(Math.max(1, edge.amount_paid_total)))}"
+            d="M ${source.x} ${source.y} Q ${midpointX} ${midpointY} ${target.x} ${target.y}"/>`;
+                }).join("");
+
+            const nodeMarkup = [...positions.values()].map(position => {
+                const node = position.node;
+                const radius = 11 + 22 * node.risk_score;
+                const selected = state.selected?.account_id === node.account_id ? "selected" : "";
+
+                return `<g data-account="${safe(node.account_id)}">
+          <circle class="node ${riskBin(node.risk_score)} ${selected}"
+            cx="${position.x}" cy="${position.y}" r="${radius}" fill="var(--risk)"/>
+          <text class="node-label" x="${position.x}" y="${position.y + radius + 16}">
+            ${safe(node.account_id).slice(0, 16)}
+          </text>
+          <text class="node-value" x="${position.x}" y="${position.y + radius + 29}">
+            ${percent(node.risk_score)}
+          </text>
+        </g>`;
+            }).join("");
+
+            $("#graph-slot").innerHTML = `
+        <div class="graphbox">
+          <svg id="graph" viewBox="0 0 900 470">
+            <defs>
+              <marker id="arrow" markerWidth="7" markerHeight="7" refX="8" refY="3.5" orient="auto">
+                <path d="M0,0 L0,7 L7,3.5 z" fill="#70829a"/>
+              </marker>
+            </defs>
+            <g transform="scale(${state.scale})">${edgeMarkup}${nodeMarkup}</g>
+          </svg>
+          <div class="controls">
+            <button id="zoom-in">+</button>
+            <button id="zoom-out">−</button>
+            <button id="fit">⌗</button>
+          </div>
+          <div class="caption">Arrow width = transaction value. Amber arrows = traced relay flow path.</div>
+        </div>
+        <div class="legend">
+          <span class="green"><i></i>Low risk</span>
+          <span class="yellow"><i></i>Medium risk</span>
+          <span class="orange"><i></i>High risk</span>
+          <span class="critical"><i></i>Critical risk</span>
+          <span>→ Transfer direction</span>
+        </div>`;
+
+            $("#graph").querySelectorAll("g[data-account]").forEach(group => {
+                group.onclick = () => {
+                    state.selected = nodes.find(node => node.account_id === group.dataset.account);
+                    renderDetail();
+                    renderGraph();
+                };
+            });
+
+            $("#zoom-in").onclick = () => {
+                state.scale = Math.min(1.8, state.scale + 0.15);
+                renderGraph();
+            };
+
+            $("#zoom-out").onclick = () => {
+                state.scale = Math.max(0.6, state.scale - 0.15);
+                renderGraph();
+            };
+
+            $("#fit").onclick = () => {
+                state.scale = 1;
+                renderGraph();
+            };
+        }
+
+        function renderDetail() {
+            const panel = $("#detail");
+
+            if (!state.selected) {
+                panel.hidden = true;
+                $("#workspace").classList.remove("open");
+                return;
+            }
+
+            panel.hidden = false;
+            $("#workspace").classList.add("open");
+
+            const account = state.selected;
+            const edges = state.detail.edges.filter(
+                edge => edge.source_account_id === account.account_id ||
+                    edge.target_account_id === account.account_id
+            );
+
+            const roles = graphRoles(state.detail.nodes, state.detail.edges);
+            const role = roles[account.account_id];
+
+            const evidence = edges.slice(0, 5).map(edge => `
+        <div class="timeline">
+          <i></i>
+          <div>
+            <b class="mono">${safe(edge.source_account_id)} → ${safe(edge.target_account_id)}</b>
+            <small>${number(edge.transaction_count)} transfers · ${amount(edge.amount_paid_total)}</small>
+          </div>
+        </div>
+      `).join("");
+
+            panel.innerHTML = `
+        <div class="detail-head">
+          <div><p class="eyebrow">ACCOUNT PROFILE</p><h2 class="mono">${safe(account.account_id)}</h2></div>
+          <button id="close-detail">×</button>
+        </div>
+
+        <div class="gauge ${riskBin(account.risk_score)}">
+          <svg viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="48"/>
+            <circle class="value" cx="60" cy="60" r="48" pathLength="100"
+              stroke-dasharray="${account.risk_score * 100} 100"/>
+          </svg>
+          <div><strong>${Math.round(account.risk_score * 100)}</strong><span>${riskLabel(account.risk_score)}</span></div>
+        </div>
+
+        ${badge(account.risk_score)}
+
+        <div class="profile-grid">
+          <div>Network role<b>${role.label}</b></div>
+          <div>Transfers<b>${number(role.inCount + role.outCount)}</b></div>
+          <div>Incoming value<b>${money(role.incoming)}</b></div>
+          <div>Outgoing value<b>${money(role.outgoing)}</b></div>
+        </div>
+
+        <div class="section">
+          <h3>Transaction evidence</h3>
+          ${evidence || "<span class='na'>No in-network transactions found.</span>"}
+        </div>
+
+        <div class="section">
+          <h3>Linked identifiers</h3>
+          <span class="na">Device, IP, and phone data is not present in the current post-processing output.</span>
+        </div>
+
+        <div class="actions">
+          <button class="danger">Freeze</button>
+          <button class="primary">Escalate</button>
+          <button>Add to case</button>
+          <button>False positive</button>
+        </div>`;
+
+            $("#close-detail").onclick = () => {
+                state.selected = null;
+                renderDetail();
+                renderGraph();
+            };
+        }
+
+        function accountTable() {
+            const roles = graphRoles(state.detail.nodes, state.detail.edges);
+
+            return `<table>
+        <thead><tr><th>Account</th><th>Risk</th><th>Graph role</th><th>Incoming</th><th>Outgoing</th></tr></thead>
+        <tbody>
+          ${[...state.detail.nodes]
+                    .sort((a, b) => b.risk_score - a.risk_score)
+                    .slice(0, 20)
+                    .map(node => {
+                        const role = roles[node.account_id];
+                        return `<tr>
+                <td class="mono">${safe(node.account_id)}</td>
+                <td>${badge(node.risk_score)}</td>
+                <td><b>${role.label}</b></td>
+                <td class="mono">${amount(role.incoming)}</td>
+                <td class="mono">${amount(role.outgoing)}</td>
+              </tr>`;
+                    }).join("")}
+        </tbody>
+      </table>`;
+        }
+
+        function flowTable() {
+            if (!state.detail.paths.length) {
+                return "<div class='empty'>No time/amount-consistent flow paths found under the selected rules.</div>";
+            }
+
+            return state.detail.paths.slice(0, 20).map(path => `
+        <div class="flow">
+          <div>
+            <b class="mono">${safe(path.source_account_id)} → ${safe(path.intermediary_account_id)} → ${safe(path.target_account_id)}</b>
+            <small>Source → relay → sink · ${path.gap_hours.toFixed(1)} hour gap · amount ratio ${path.amount_ratio.toFixed(2)}</small>
+          </div>
+          <div>${badge(path.path_risk_score)}<small class="mono">${amount(path.out_amount)}</small></div>
+        </div>
+      `).join("");
+        }
+
+        function sourceSinkTable() {
+            const roles = graphRoles(state.detail.nodes, state.detail.edges);
+
+            const sources = Object.entries(roles)
+                .filter(([, role]) => role.label === "Source")
+                .sort((a, b) => b[1].net - a[1].net)
+                .slice(0, 8);
+
+            const sinks = Object.entries(roles)
+                .filter(([, role]) => role.label === "Sink")
+                .sort((a, b) => a[1].net - b[1].net)
+                .slice(0, 8);
+
+            return `<table>
+        <thead><tr><th>Potential source</th><th>Net outflow</th><th>Potential sink</th><th>Net inflow</th></tr></thead>
+        <tbody>
+          ${Array.from({ length: Math.max(sources.length, sinks.length) }, (_, index) => {
+                const source = sources[index];
+                const sink = sinks[index];
+
+                return `<tr>
+              <td class="mono">${source ? safe(source[0]) : "—"}</td>
+              <td class="mono">${source ? amount(source[1].net) : "—"}</td>
+              <td class="mono">${sink ? safe(sink[0]) : "—"}</td>
+              <td class="mono">${sink ? amount(-sink[1].net) : "—"}</td>
+            </tr>`;
+            }).join("")}
+        </tbody>
+      </table>`;
+        }
+
+        function renderAnalysis() {
+            let content = "";
+
+            if (state.tab === "accounts") content = accountTable();
+            if (state.tab === "flows") content = flowTable();
+            if (state.tab === "roles") content = sourceSinkTable();
+
+            $("#analysis").innerHTML = `
+        <div class="tabs">
+          <div>
+            <button class="tab ${state.tab === "accounts" ? "active" : ""}" data-tab="accounts">Accounts in network</button>
+            <button class="tab ${state.tab === "flows" ? "active" : ""}" data-tab="flows">Money flow paths</button>
+            <button class="tab ${state.tab === "roles" ? "active" : ""}" data-tab="roles">Sources & sinks</button>
+          </div>
+          <button id="csv">⇩ Export CSV</button>
+        </div>
+        <div class="table-wrap">${content}</div>`;
+
+            $("#analysis").querySelectorAll("[data-tab]").forEach(button => {
+                button.onclick = () => {
+                    state.tab = button.dataset.tab;
+                    renderAnalysis();
+                };
+            });
+
+            $("#csv").onclick = exportCsv;
+        }
+
+        function exportCsv() {
+            const csv = [
+                "network_id,network_score,accounts,transactions,suspicious_value",
+                ...state.networks.map(network => [
+                    network.component_id,
+                    network.network_score,
+                    network.account_count,
+                    network.transaction_count,
+                    network.suspicious_value
+                ].join(","))
+            ].join("\n");
+
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+            link.download = "mule-network-cases.csv";
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        function renderWork() {
+            const network = state.detail.network;
+
+            $("#work").innerHTML = `
+        <div class="work-header">
+          <div>
+            <p class="eyebrow">ACTIVE INVESTIGATION</p>
+            <h2>${safe(network.component_id.replace("network_", "Network "))}</h2>
+            <small>${number(network.account_count)} accounts · ${number(network.transaction_count)} transfers · ${money(network.suspicious_value)} at risk</small>
+          </div>
+          <div>
+            ${badge(network.network_score)}
+            <button id="toggle-detail">Toggle details</button>
+          </div>
+        </div>
+        <div id="graph-slot"></div>
+        <section id="analysis" class="analysis"></section>`;
+
+            $("#toggle-detail").onclick = () => {
+                state.selected = state.selected
+                    ? null
+                    : [...state.detail.nodes].sort((a, b) => b.risk_score - a.risk_score)[0];
+
+                renderDetail();
+                renderGraph();
+            };
+
+            renderGraph();
+            renderAnalysis();
+            renderDetail();
+        }
+
+        async function loadNetwork(networkId) {
+            const response = await fetch(`/api/network/${encodeURIComponent(networkId)}`);
+            state.detail = await response.json();
+            state.selected = [...state.detail.nodes].sort((a, b) => b.risk_score - a.risk_score)[0];
+            state.scale = 1;
+
+            renderQueue();
+            renderWork();
+        }
+
+        async function init() {
+            try {
+                const response = await fetch("/api/networks?limit=100");
+                state.networks = (await response.json()).networks;
+
+                renderKpis();
+                renderQueue();
+
+                if (state.networks[0]) {
+                    await loadNetwork(state.networks[0].component_id);
+                }
+            } catch {
+                $("#work").innerHTML = `
+          <div class="empty">
+            <h2>Network data unavailable</h2>
+            <p>Start the Python network server, then reload this page.</p>
+          </div>`;
+            }
+        }
+
+        $("#theme").onclick = () => {
+            document.body.classList.toggle("light");
+            $("#theme").textContent = document.body.classList.contains("light") ? "☾" : "☀";
+        };
+
+        init();
+    </script>
+</body>
+
+</html>

@@ -2,11 +2,11 @@ from pathlib import Path
 
 # Raw IBM HI-Medium files. They stay outside the Git repository.
 ACCOUNTS_FILE = Path(
-    r"C:\Users\ruhan\OneDrive\Desktop\HI-Medium_accounts.csv"
+    r"C:\Users\Samarth\Desktop\GNN\HI-Medium_accounts.csv"
 )
 
 TRANSACTIONS_FILE = Path(
-    r"C:\Users\ruhan\OneDrive\Desktop\HI-Medium_Trans.csv"
+    r"C:\Users\Samarth\Desktop\GNN\HI-Medium_Trans.csv"
 )
 
 # AML-Training-main directory

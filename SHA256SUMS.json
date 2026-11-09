@@ -1,0 +1,23 @@
+{
+  "STAGE2_UPGRADE.md": "20954e85e27001be9fae1b62670f0128af27258ae09c7a12aca8e339d3a18d3a",
+  "docs/stage2/ORIGINAL_SOURCE_SHA256.json": "9a0364bb65bb723a173bf8260c1f22e8f50a9f44fa51654f1fbaf1d476c42763",
+  "docs/stage2/ORIGINAL_VS_V3.md": "f54477fea8a94968eb253ef16012ae261fdca7bfc67a81896fe76945678daa97",
+  "docs/stage2/PARQUET_DIRECTORY_FIX.md": "cf78106c69675b93b4574234cb9e656bea739680965c5eaae66c01f217c1135b",
+  "docs/stage2/RUNBOOK.md": "29e7c9c286db42a38af2d7d553187b0f6e41271c16b15e2acc62ad489ecdef66",
+  "docs/stage2/TEST_OUTPUT.txt": "65a563cdd6d448ea41d119a5871669ee1aa095cb29a8342053f2a81bd6343667",
+  "docs/stage2/UPDATES.md": "1f1886c1567c79b02dec1f390a3a69240468b1eaea3b5c69e2bc78480c7e276e",
+  "docs/stage2/VALIDATION.md": "2b2a4b65cc90d7bf3902bbf637a5317c7f1cd5e98a72dd2bb4c7c81d4c610e05",
+  "requirements-stage2.txt": "f7f61172298c05f0ccb6f7d9c189efa390c377bf87f687202cb7a52fefed8495",
+  "stage2/__init__.py": "c5d272dc8cdcc61fd870604bb411503dad135c082a07a150e9c9908a240ebaf1",
+  "stage2/checkpointing.py": "4b616e881cfcd17e9a2d7dbdf43269eb6d8a1ab73388ffbf6a520a1cc74009e8",
+  "stage2/conservation_loss.py": "c0b46e8da85518ba5c195d5a406c226a546b746b84ee1ced2d291f42b5f7ebd2",
+  "stage2/dataset.py": "e3adf71e7fad286db67fce74beb2206dbd425674011ee17e530659825b222508",
+  "stage2/evaluate.py": "1603fa9fcdf77f8654cfefde83f336b9e8f65d19e0db0a903354d295fac639cf",
+  "stage2/model.py": "74ca292b399280f6b6c66d7d868d76ef954c114b2954f5f05d3489ff91a4d234",
+  "stage2/preprocessing.py": "c2325b8232da8bc3e09a9c2dd7802ddbbd70ff267b695526564c838688cc35bc",
+  "stage2/tgat_attention.py": "96c7e41a15c2b5e6bfad61c2b735d02ba8d626306411f94d668b1facec1a3e93",
+  "stage2/tgn_memory.py": "e9dfc297368e0db552a9ec8278d9d45a51e0141e41b007024206dccc2d8186f6",
+  "stage2/time_encoding.py": "2d254817152310429cb2267a6081aa61cfd9379f5d5a5eb0d0bbf6521cd5e4a9",
+  "stage2/train.py": "893d87f21cd4d86ae04d03778e0df35a4940aada028e0675e663ed87c0055e20",
+  "tests/test_stage2_v3.py": "720576b4125b6d89563c42acffd68881781691703e97e999e82758ba63c8456c"
+}

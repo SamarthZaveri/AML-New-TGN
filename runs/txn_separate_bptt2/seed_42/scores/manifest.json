@@ -1,0 +1,10 @@
+{
+  "scope": "test-window transaction predictions and last-touch active-account scores",
+  "mode": "separate",
+  "fingerprint": "0c23ac5c96ba015cb7ea7ebc4729f904d223376e934935940a1493f39a61b0f1",
+  "thresholds": {
+    "account_base": 0.8608284592628479,
+    "account_final": 0.5222245454788208,
+    "transaction": 0.9157229065895081
+  }
+}

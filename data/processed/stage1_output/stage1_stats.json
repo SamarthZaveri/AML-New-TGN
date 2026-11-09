@@ -1,0 +1,46 @@
+{
+  "chain_comparison": {
+    "laundering_count": 35230,
+    "random_count": 10000,
+    "laundering_mean_length": 2.123814930456997,
+    "laundering_median_length": 2.0,
+    "laundering_max_length": 20,
+    "laundering_std_length": 1.6129788599160542,
+    "random_mean_length": 1.7917,
+    "random_median_length": 1.0,
+    "random_max_length": 20,
+    "random_std_length": 1.0907387909119213,
+    "laundering_nontrivial_fraction": 0.5365029804144196,
+    "random_nontrivial_fraction": 0.4804
+  },
+  "config": {
+    "max_gap_hours": 72,
+    "max_chain_length": 20,
+    "conservation_tolerance": 0.05,
+    "conservation_aggregation": "product"
+  },
+  "relay_check": {
+    "bank": {
+      "count": 122333,
+      "mean_accounts": 16.97843590854471,
+      "median_accounts": 4.0,
+      "max_accounts": 3738,
+      "std_accounts": 76.1447196864701,
+      "singleton_fraction": 0.2046708574137804,
+      "p90_accounts": 13.0,
+      "p99_accounts": 385.0
+    },
+    "entity": {
+      "count": 668138,
+      "mean_accounts": 3.1086736572384748,
+      "median_accounts": 1.0,
+      "max_accounts": 8638,
+      "std_accounts": 24.95255232144362,
+      "singleton_fraction": 0.6853060295926889,
+      "p90_accounts": 6.0,
+      "p99_accounts": 22.0
+    },
+    "bank_relay_recommended": true,
+    "entity_relay_recommended": true
+  }
+}

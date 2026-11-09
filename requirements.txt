@@ -1,3 +1,9 @@
+# MuleDetector — Dependencies (new additions for Stage 1 + Stage 2)
+# scikit-learn is already listed below but used by: evaluate.py, dataset.py
+# pyarrow is already listed below but used by: event_replay_pipeline.py, dataset.py
+# No additional packages needed — the model uses only torch, pandas, numpy, scikit-learn, pyarrow
+
+# Original project dependencies (DO NOT REMOVE)
 aiohttp==3.13.5
 matplotlib==3.8.4
 numpy==1.26.4

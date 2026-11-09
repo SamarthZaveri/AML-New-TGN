@@ -1,0 +1,19 @@
+{
+  "account_scores": "runs\\stage2_chrono_5\\account_scores.parquet",
+  "events": "data\\processed\\event_stream\\events.parquet",
+  "config": {
+    "red_threshold": 0.8,
+    "yellow_threshold": 0.55,
+    "context_min_score": 0.15,
+    "max_flow_gap_hours": 72.0,
+    "amount_ratio_low": 0.7,
+    "amount_ratio_high": 1.3,
+    "max_paths_per_intermediary": 200,
+    "max_candidate_events": 5000000,
+    "max_context_accounts": 50000
+  },
+  "selected_accounts": 50000,
+  "candidate_events": 266494,
+  "network_count": 25256,
+  "flow_path_count": 17621
+}
