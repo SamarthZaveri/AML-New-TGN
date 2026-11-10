@@ -25,3 +25,8 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+# Inference outputs and the handover package payload (images, prepared data)
+inference/outputs/
+muledetector_pipeline/images/
+muledetector_pipeline/data/
+!inference/model/best.pt

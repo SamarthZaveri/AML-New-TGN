@@ -1,0 +1,6 @@
+# The versions used for the verified shared implementation.
+numpy==2.4.6
+pandas==2.3.3
+pyarrow==24.0.0
+pyspark==4.2.0
+kafka-python==3.0.11

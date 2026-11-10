@@ -5,18 +5,20 @@ The static Spark feature pipeline is described in the top-level `README.md`.
 
 ## TL;DR
 
-- **Final model:** separate mode (`stage2.train_transactions --mode separate`), trained with 3 seeds (42, 7, 2024) in `runs/txn_separate_seeds/`.
-- **Inference:** average the three seeds' scores.
-  - Account risk = mean of `base_account_risk_score`. Do **not** use `risk_score`, the fixed 0.5 blend.
-  - Transaction risk = mean of `transaction_risk_score`.
-- **Test AUPRC of the 3-seed average:**
+- **Final model:** one model, separate mode, seed 42: `runs/txn_separate_seeds/seed_42/best.pt` (epoch 8). It was picked because it has the highest validation AUPRC of the 3 seeds.
+- **Inference:**
+  - Account risk = `base_account_risk_score`. Do **not** use `risk_score`, the fixed 0.5 blend.
+  - Transaction risk = `transaction_risk_score`.
+  - Thresholds are the ones stored in `best.pt`.
+- **Test AUPRC:**
 
   | Score | Full test | Clean test | Positive rate |
   |---|---|---|---|
-  | Account | **0.523** | **0.412** | 2.4% |
-  | Transaction | **0.665** | **0.482** | 0.18% |
+  | Account | **0.508** | **0.396** | 2.4% |
+  | Transaction | **0.637** | **0.461** | 0.18% |
 
   The clean test drops the end-of-data tail ([Known issues](#known-issues)).
+- Averaging the 3 seeds would score higher (0.523 account, 0.665 transaction), but it was left out to keep inference to a single model.
 - The gradient-boosting stacker is **not** used. It added only about +0.01 per seed.
 - The reported numbers are **optimistic**, because two account features leak future information ([Known issues](#known-issues)). Treat the clean-test numbers as the upper bound you can honestly expect.
 
@@ -153,24 +155,16 @@ These affect every run above, so they don't change the ranking between runs, but
 
 ## What we use: the frozen model
 
-**Files.** Everything is in `runs/txn_separate_seeds/`:
-```
-seed_42/best.pt     seed_7/best.pt     seed_2024/best.pt     # frozen weights + per-seed thresholds
-seed_*/scores_val/  seed_*/scores/                           # val / test exports (parquet)
-seed_*/history.json seed_*/results.json                      # per-epoch val, per-seed test metrics
-summary.json        stacker_summary.json                     # aggregates
-```
+**Model:** `runs/txn_separate_seeds/seed_42/best.pt`, which holds the weights and the validation thresholds.
+- Its exports are in `seed_42/scores_val/` and `seed_42/scores/`.
+- Its metrics are in `seed_42/history.json` and `seed_42/results.json`.
 
-**Scoring.** Run all three checkpoints through the event stream, then average:
-- account risk = mean of `base_account_risk_score` across seeds
-- transaction risk = mean of `transaction_risk_score` across seeds
+**Scoring.**
+- Account risk = `base_account_risk_score`.
+- Transaction risk = `transaction_risk_score`.
+- Use the `account_base` and `transaction` thresholds saved in `best.pt`.
 
-**Thresholds.**
-- They must be refitted on the **averaged validation scores** (F1-max on `scores_val/`), then frozen.
-- The per-seed thresholds in `best.pt` don't apply to averaged scores.
-- *This step is still to be done.*
-
-**If one model has to be used.** Use seed 42. It has the highest validation AUPRC (0.496), so it's chosen without looking at test. Expect about 0.51 on full test and 0.40 on clean test for accounts.
+**Why seed 42.** It has the highest validation AUPRC of the 3 seeds (0.496 vs 0.473 and 0.444), so it was chosen without looking at test. Seeds 7 and 2024 are kept only as evidence of how much results vary between seeds.
 
 **Reproduce**
 ```powershell
@@ -186,7 +180,7 @@ Notes for running:
 
 ## Next steps
 
-1. Refit thresholds on the averaged validation scores and write a frozen ensemble manifest.
+1. Build an inference adapter for the streaming pipeline packages, using seed 42 only.
 2. Retrain without the leaking features. At minimum, drop `hours_since_last_txn` and `active_span_hours`. Ideally, compute all static features from the training window only or as of each event's time.
 3. Compare against a simple baseline, such as gradient boosting on static and transaction features only, so the GNN's added value is measured.
 4. Revisit the `new_stage_2` ideas: time-aware labels, attention that knows direction and edge features, and account context in the transaction head.

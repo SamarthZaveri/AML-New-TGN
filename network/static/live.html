@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Live Mule Networks</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+    <style>
+        :root {
+            --bg: #0a101c;
+            --surface: #0f1726;
+            --raised: #141e30;
+            --hover: #18243a;
+            --border: #1e2b42;
+            --border-strong: #2a3a57;
+            --text: #e6ecf5;
+            --muted: #8796ad;
+            --faint: #5d6c84;
+            --accent: #38bdf8;
+            --accent-soft: rgba(56, 189, 248, .12);
+            --red: #f43f5e;
+            --amber: #f59e0b;
+            --green: #22c55e;
+            --radius: 12px;
+            --shadow: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 8px 24px rgba(0, 0, 0, .25);
+            --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        * { box-sizing: border-box }
+
+        html, body { height: 100% }
+
+        body {
+            margin: 0;
+            background: radial-gradient(1200px 600px at 10% -10%, rgba(56, 189, 248, .06), transparent 60%), var(--bg);
+            color: var(--text);
+            font: 14px/1.45 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px }
+        ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 8px }
+        ::-webkit-scrollbar-track { background: transparent }
+
+        .mono { font-family: var(--mono); font-size: 12px }
+        .num { font-variant-numeric: tabular-nums }
+
+        /* ---------- header ---------- */
+        header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(15, 23, 38, .85);
+            backdrop-filter: blur(8px);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .logo {
+            width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+            background: linear-gradient(135deg, #38bdf8, #6366f1); color: #fff; font-weight: 700;
+            box-shadow: 0 4px 14px rgba(56, 189, 248, .35);
+        }
+
+        .title { display: flex; flex-direction: column; margin-right: auto; min-width: 0 }
+        .title small { color: var(--accent); font-size: 10.5px; font-weight: 600; letter-spacing: .14em }
+        .title h1 { margin: 0; font-size: 16px; font-weight: 600 }
+
+        .chip {
+            display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px;
+            border: 1px solid var(--border-strong); color: var(--muted); font-size: 12px; font-weight: 500;
+            background: var(--surface); white-space: nowrap;
+        }
+        .chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint) }
+        .chip.live { color: var(--green); border-color: rgba(34, 197, 94, .4) }
+        .chip.live i { background: var(--green); box-shadow: 0 0 0 0 rgba(34, 197, 94, .6); animation: pulse 1.8s infinite }
+        .chip.warm { color: var(--amber); border-color: rgba(245, 158, 11, .4) }
+        .chip.warm i { background: var(--amber) }
+        @keyframes pulse { 70% { box-shadow: 0 0 0 7px rgba(34, 197, 94, 0) } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0) } }
+
+        /* ---------- KPI strip ---------- */
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 12px;
+            padding: 16px 24px 4px;
+        }
+
+        .kpi {
+            background: linear-gradient(180deg, var(--raised), var(--surface));
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px 10px;
+            box-shadow: var(--shadow);
+            min-width: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi span { display: block; color: var(--muted); font-size: 11.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+        .kpi b { display: block; font-size: 22px; font-weight: 600; margin-top: 2px; letter-spacing: -.01em }
+        .kpi small { color: var(--faint); font-size: 11.5px }
+        .kpi svg { position: absolute; right: 10px; bottom: 10px; width: 64px; height: 22px; opacity: .9 }
+        .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--k, var(--accent)); opacity: .85 }
+
+        /* ---------- layout ---------- */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 330px minmax(0, 1fr) 300px;
+            gap: 16px;
+            padding: 12px 24px 24px;
+            min-height: 0;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-head {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            padding: 12px 16px; border-bottom: 1px solid var(--border);
+        }
+        .card-head h2 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .01em }
+        .card-head .sub { color: var(--muted); font-size: 12px }
+
+        /* ---------- network list ---------- */
+        #list { overflow-y: auto; flex: 1; padding: 6px }
+
+        .row {
+            display: grid; grid-template-columns: 24px 1fr auto; gap: 3px 10px; align-items: center;
+            padding: 10px 10px; border-radius: 9px; cursor: pointer; border: 1px solid transparent;
+            transition: background .5s, border-color .2s;
+        }
+        .row:hover { background: var(--hover) }
+        .row.selected { background: var(--accent-soft); border-color: rgba(56, 189, 248, .35) }
+        .row.flash { background: rgba(56, 189, 248, .16) }
+        .row.enter { animation: enter .6s ease-out }
+        @keyframes enter { from { opacity: 0; transform: translateX(-10px) } to { opacity: 1; transform: none } }
+        .rank { color: var(--faint); font-size: 12px; text-align: right }
+        .name { font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 7px; min-width: 0 }
+        .score { font-weight: 600; font-size: 13px }
+        .bar { grid-column: 2 / 4; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden }
+        .bar i { display: block; height: 100%; border-radius: 4px; transition: width .6s }
+        .meta { grid-column: 2 / 4; color: var(--muted); font-size: 11.5px }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none }
+        .move { font-size: 10.5px; font-weight: 600 }
+        .up { color: var(--green) }
+        .down { color: var(--red) }
+
+        /* ---------- centre ---------- */
+        .centre { display: flex; flex-direction: column; gap: 16px; min-width: 0; min-height: 0 }
+
+        .graph-card { flex: 1.35; min-height: 380px }
+        .graph-title { display: flex; align-items: center; gap: 10px; min-width: 0 }
+        .graph-title h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+
+        .pill { padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em }
+        .pill.red { color: #fecdd3; background: rgba(244, 63, 94, .18) }
+        .pill.yellow { color: #fde68a; background: rgba(245, 158, 11, .18) }
+        .pill.green { color: #bbf7d0; background: rgba(34, 197, 94, .16) }
+
+        .tools { display: flex; align-items: center; gap: 8px }
+        .switch { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; cursor: pointer; user-select: none }
+        .switch input { display: none }
+        .switch span { width: 30px; height: 17px; border-radius: 999px; background: var(--border-strong); position: relative; transition: background .2s }
+        .switch span::after { content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; transition: transform .2s }
+        .switch input:checked + span { background: var(--accent) }
+        .switch input:checked + span::after { transform: translateX(13px) }
+
+        button.ghost {
+            background: var(--raised); color: var(--text); border: 1px solid var(--border-strong); border-radius: 8px;
+            padding: 5px 10px; font: inherit; font-size: 12px; cursor: pointer;
+        }
+        button.ghost:hover { border-color: var(--accent) }
+
+        #graph-wrap { position: relative; flex: 1; min-height: 0 }
+        #graph { position: absolute; inset: 0 }
+        #empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); text-align: center; padding: 24px }
+        #empty b { display: block; color: var(--text); font-weight: 600; margin-bottom: 4px }
+
+        .graph-foot {
+            display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 16px; border-top: 1px solid var(--border);
+            color: var(--muted); font-size: 11.5px;
+        }
+        .graph-foot span { display: inline-flex; align-items: center; gap: 6px }
+        .shape { width: 10px; height: 10px; background: var(--muted); display: inline-block }
+        .shape.tri { width: 0; height: 0; background: none; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 10px solid var(--muted) }
+        .shape.circle { border-radius: 50% }
+
+        .analysis { flex: 1; min-height: 240px }
+        .tabs { display: flex; gap: 4px }
+        .tab {
+            background: none; border: 0; color: var(--muted); font: inherit; font-size: 12.5px; font-weight: 500;
+            padding: 6px 11px; border-radius: 8px; cursor: pointer;
+        }
+        .tab:hover { color: var(--text) }
+        .tab.active { color: var(--text); background: var(--raised) }
+        .tab b { color: var(--faint); font-weight: 500; margin-left: 4px }
+        .table-wrap { overflow: auto; flex: 1 }
+
+        table { width: 100%; border-collapse: collapse; font-size: 12.5px }
+        th { position: sticky; top: 0; background: var(--surface); color: var(--muted); font-weight: 500; text-align: left; padding: 9px 16px; border-bottom: 1px solid var(--border); white-space: nowrap }
+        td { padding: 8px 16px; border-bottom: 1px solid rgba(30, 43, 66, .6); white-space: nowrap }
+        tr:hover td { background: var(--hover) }
+        td.r, th.r { text-align: right }
+        .role { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: var(--raised); color: var(--muted) }
+        .role.Source { color: #7dd3fc; background: rgba(56, 189, 248, .12) }
+        .role.Sink { color: #c4b5fd; background: rgba(139, 92, 246, .14) }
+        .role.Relay { color: #fcd34d; background: rgba(245, 158, 11, .12) }
+        .path { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
+        .path .arrow { color: var(--faint) }
+        .none { color: var(--muted); padding: 22px 16px }
+
+        /* ---------- right panel ---------- */
+        .side { overflow-y: auto; padding: 14px 16px 18px }
+        .side h3 { margin: 18px 0 8px; font-size: 11px; color: var(--faint); font-weight: 600; letter-spacing: .1em; text-transform: uppercase }
+        .side h3:first-child { margin-top: 0 }
+        #sel-name { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+        dl { display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; margin: 10px 0 0 }
+        dt { color: var(--muted) }
+        dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500 }
+        .roles { display: grid; gap: 8px }
+        .roles div { display: grid; grid-template-columns: 62px 1fr 34px; align-items: center; gap: 8px; font-size: 12px; color: var(--muted) }
+        .roles .track { height: 6px; background: var(--border); border-radius: 6px; overflow: hidden }
+        .roles .track i { display: block; height: 100% }
+        .legend { display: grid; gap: 7px; color: var(--muted); font-size: 12px }
+        .legend div { display: flex; align-items: center; gap: 8px }
+        .note { color: var(--faint); font-size: 12px; line-height: 1.55; margin: 14px 0 0 }
+
+        @media (max-width: 1280px) {
+            .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)) }
+            main { grid-template-columns: 290px minmax(0, 1fr) }
+            .side-card { grid-column: 1 / -1 }
+        }
+
+        @media (max-width: 860px) {
+            header { padding: 12px 16px; flex-wrap: wrap }
+            .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px 16px 0 }
+            main { grid-template-columns: 1fr; padding: 12px 16px 20px }
+            .list-card { max-height: 340px }
+            .graph-card { min-height: 60vh }
+            .kpi svg { display: none }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="logo">M</div>
+        <div class="title">
+            <small>LIVE SCORING</small>
+            <h1>Mule network monitor</h1>
+        </div>
+        <span id="run" class="chip mono" hidden></span>
+        <span id="warm" class="chip warm" hidden><i></i>Warm-up</span>
+        <span id="conn" class="chip"><i></i>Connecting</span>
+    </header>
+
+    <section class="kpis" id="kpis"></section>
+
+    <main>
+        <section class="card list-card">
+            <div class="card-head">
+                <h2>Top 25 networks</h2>
+                <span class="sub" id="list-sub">ranked by network score</span>
+            </div>
+            <div id="list"></div>
+        </section>
+
+        <div class="centre">
+            <section class="card graph-card">
+                <div class="card-head">
+                    <div class="graph-title">
+                        <h2 id="graph-name">No network selected</h2>
+                        <span id="graph-bin"></span>
+                    </div>
+                    <div class="tools">
+                        <label class="switch"><input type="checkbox" id="follow" checked><span></span>Follow #1</label>
+                        <button class="ghost" id="fit" title="Fit graph to view">Fit</button>
+                    </div>
+                </div>
+                <div id="graph-wrap">
+                    <div id="graph"></div>
+                    <div id="empty"><div><b>Waiting for scored batches</b>Networks appear here as transactions are scored.</div></div>
+                </div>
+                <div class="graph-foot">
+                    <span><i class="dot" style="background:var(--red)"></i>Red</span>
+                    <span><i class="dot" style="background:var(--amber)"></i>Yellow</span>
+                    <span><i class="dot" style="background:var(--green)"></i>Green</span>
+                    <span><i class="shape tri"></i>Source</span>
+                    <span><i class="shape circle"></i>Relay</span>
+                    <span><i class="shape"></i>Sink</span>
+                    <span style="opacity:.55"><i class="dot" style="background:var(--muted)"></i>Warm-up (faded)</span>
+                </div>
+            </section>
+
+            <section class="card analysis">
+                <div class="card-head">
+                    <div class="tabs" id="tabs">
+                        <button class="tab active" data-tab="accounts">Accounts<b id="n-accounts">0</b></button>
+                        <button class="tab" data-tab="flows">Flow paths<b id="n-flows">0</b></button>
+                        <button class="tab" data-tab="roles">Sources &amp; sinks<b id="n-roles">0</b></button>
+                    </div>
+                    <span class="sub" id="analysis-sub"></span>
+                </div>
+                <div class="table-wrap" id="analysis"></div>
+            </section>
+        </div>
+
+        <aside class="card side-card">
+            <div class="side">
+                <h3>Selected network</h3>
+                <div id="sel-name">–</div>
+                <dl id="sel-stats"></dl>
+
+                <h3>Account roles</h3>
+                <div class="roles" id="roles"></div>
+
+                <h3>Legend</h3>
+                <div class="legend">
+                    <div><span class="dot" style="background:var(--red)"></span>Red: at or above the model threshold</div>
+                    <div><span class="dot" style="background:var(--amber)"></span>Yellow: watch list</div>
+                    <div><span class="dot" style="background:var(--green)"></span>Green: low risk</div>
+                    <div><span class="role Source">Source</span>mostly sends money out</div>
+                    <div><span class="role Relay">Relay</span>passes money through</div>
+                    <div><span class="role Sink">Sink</span>mostly receives money</div>
+                </div>
+                <p class="note">Nodes are accounts, sized by account risk and shaped by role. Edges are money flows, coloured by their
+                    riskiest transaction. Networks only grow and merge; scores and colours update as transactions arrive.
+                    Very large networks show their 300 riskiest accounts.</p>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        const COLORS = { red: '#f43f5e', yellow: '#f59e0b', green: '#22c55e' };
+        const SHAPES = { Source: 'triangle', Relay: 'dot', Sink: 'square' };
+        const $ = s => document.querySelector(s);
+        const fmt = n => n == null ? '–' : Number(n).toLocaleString();
+        const money = n => n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'k' : Math.round(n || 0).toString();
+        const pct = (a, b) => b ? (100 * a / b).toFixed(1) + '%' : '–';
+        const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const pill = bin => `<span class="pill ${bin}">${bin}</span>`;
+
+        let state = { run_id: null, frame: -1, top: [], details: {}, stats: null, batch: null };
+        let selected = null, ranks = {}, source = null, tab = 'accounts';
+        const history = [];   // recent {t, scored, red, networks} for sparklines and throughput
+
+        const nodes = new vis.DataSet(), edges = new vis.DataSet();
+        const network = new vis.Network($('#graph'), { nodes, edges }, {
+            nodes: { font: { color: '#cfd8e6', size: 10, face: 'JetBrains Mono' }, borderWidth: 1.5 },
+            edges: { arrows: { to: { enabled: true, scaleFactor: .45 } }, smooth: { type: 'continuous' }, selectionWidth: 1.5 },
+            physics: { solver: 'forceAtlas2Based', stabilization: false, forceAtlas2Based: { gravitationalConstant: -45, springLength: 95, damping: .5 } },
+            interaction: { hover: true, tooltipDelay: 120 }
+        });
+        $('#fit').onclick = () => network.fit({ animation: { duration: 400 } });
+
+        // Source / relay / sink, same rule as the offline dashboard (index.html graphRoles).
+        function roles(detail) {
+            const r = Object.fromEntries(detail.nodes.map(n => [n.id, { incoming: 0, outgoing: 0, inCount: 0, outCount: 0 }]));
+            for (const e of detail.edges) {
+                if (r[e.source]) { r[e.source].outgoing += e.amount_paid_total; r[e.source].outCount += e.transaction_count; }
+                if (r[e.target]) { r[e.target].incoming += e.amount_paid_total; r[e.target].inCount += e.transaction_count; }
+            }
+            for (const v of Object.values(r)) {
+                v.net = v.outgoing - v.incoming;
+                v.label = v.outgoing > 0 && (v.incoming === 0 || v.net > v.incoming * .8) ? 'Source'
+                    : v.incoming > 0 && (v.outgoing === 0 || -v.net > v.outgoing * .8) ? 'Sink' : 'Relay';
+            }
+            return r;
+        }
+
+        function nodeView(n, role) {
+            const c = COLORS[n.bin];
+            return {
+                id: n.id, label: n.bin === 'red' ? n.id.split('::').pop() : '', shape: SHAPES[role.label],
+                size: 7 + 18 * n.score, opacity: n.in_warmup ? .35 : 1,
+                color: { background: c, border: c, highlight: { background: c, border: '#fff' }, hover: { background: c, border: '#fff' } },
+                title: `${n.id}\nrisk ${n.score.toFixed(3)} (${n.bin})\n${role.label} · in ${money(role.incoming)} · out ${money(role.outgoing)}${n.in_warmup ? '\nwarm-up' : ''}`
+            };
+        }
+        function edgeView(e) {
+            return {
+                id: e.source + '|' + e.target, from: e.source, to: e.target,
+                width: .8 + Math.log1p(e.transaction_count), color: { color: COLORS[e.bin], opacity: e.in_warmup ? .2 : .7 },
+                title: `${e.transaction_count} txns · ${money(e.amount_paid_total)} paid\nmax txn risk ${e.max_transaction_score.toFixed(3)}`
+            };
+        }
+
+        // Diff the selected network into the graph so it visibly grows instead of redrawing.
+        function render(detail, reset) {
+            $('#empty').hidden = !!detail;
+            if (!detail) { nodes.clear(); edges.clear(); renderSide(null); renderAnalysis(null); return; }
+            if (reset) { nodes.clear(); edges.clear(); }
+            const r = roles(detail);
+            const nv = detail.nodes.map(n => nodeView(n, r[n.id])), ev = detail.edges.map(edgeView);
+            const keepN = new Set(nv.map(n => n.id)), keepE = new Set(ev.map(e => e.id));
+            nodes.remove(nodes.getIds().filter(id => !keepN.has(id)));
+            edges.remove(edges.getIds().filter(id => !keepE.has(id)));
+            nodes.update(nv); edges.update(ev);
+            renderSide(detail, r);
+            renderAnalysis(detail, r);
+        }
+
+        function renderSide(detail, r) {
+            if (!detail) {
+                $('#graph-name').textContent = 'No network selected'; $('#graph-bin').innerHTML = '';
+                $('#sel-name').textContent = '–'; $('#sel-stats').innerHTML = ''; $('#roles').innerHTML = ''; return;
+            }
+            const s = detail.summary;
+            $('#graph-name').textContent = s.component_id;
+            $('#graph-bin').innerHTML = pill(s.network_bin);
+            $('#sel-name').innerHTML = `<span class="mono">${esc(s.component_id)}</span>${pill(s.network_bin)}`;
+            const rows = [['Network score', s.network_score.toFixed(3)], ['Accounts', fmt(s.account_count)],
+            ['Red / yellow accounts', `${s.red_accounts} / ${s.yellow_accounts}`], ['Max account risk', s.risk_score_max.toFixed(3)],
+            ['Mean account risk', s.risk_score_mean.toFixed(3)], ['Money flows', fmt(s.edge_count)], ['Transactions', fmt(s.transaction_count)],
+            ['Value moved', money(s.suspicious_value)], ['Flow paths', fmt(s.flow_path_count)], ['Hidden accounts', fmt(detail.hidden_nodes)]];
+            $('#sel-stats').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('');
+            const counts = { Source: 0, Relay: 0, Sink: 0 };
+            Object.values(r).forEach(v => counts[v.label]++);
+            const total = Math.max(1, detail.nodes.length);
+            const tone = { Source: '#38bdf8', Relay: '#f59e0b', Sink: '#8b5cf6' };
+            $('#roles').innerHTML = Object.entries(counts).map(([k, v]) =>
+                `<div><span>${k}s</span><span class="track"><i style="width:${(100 * v / total).toFixed(1)}%;background:${tone[k]}"></i></span><span class="num" style="text-align:right">${v}</span></div>`).join('');
+        }
+
+        function renderAnalysis(detail, r) {
+            const view = $('#analysis');
+            if (!detail) { view.innerHTML = '<div class="none">Select a network to see its accounts, flow paths, sources and sinks.</div>'; return; }
+            const paths = detail.paths || [];
+            const sources = Object.entries(r).filter(([, v]) => v.label === 'Source').sort((a, b) => b[1].net - a[1].net);
+            const sinks = Object.entries(r).filter(([, v]) => v.label === 'Sink').sort((a, b) => a[1].net - b[1].net);
+            $('#n-accounts').textContent = detail.nodes.length;
+            $('#n-flows').textContent = paths.length;
+            $('#n-roles').textContent = sources.length + sinks.length;
+            const byId = Object.fromEntries(detail.nodes.map(n => [n.id, n]));
+            if (tab === 'accounts') {
+                $('#analysis-sub').textContent = 'highest risk first';
+                view.innerHTML = `<table><thead><tr><th>Account</th><th>Risk</th><th>Role</th><th class="r">Incoming</th><th class="r">Outgoing</th><th class="r">Txns in / out</th></tr></thead><tbody>${detail.nodes.slice(0, 100).map(n => {
+                    const v = r[n.id];
+                    return `<tr><td class="mono">${esc(n.id)}</td><td><span class="dot" style="background:${COLORS[n.bin]}"></span> <span class="num">${n.score.toFixed(3)}</span></td>
+                    <td><span class="role ${v.label}">${v.label}</span></td><td class="r num">${money(v.incoming)}</td><td class="r num">${money(v.outgoing)}</td><td class="r num">${v.inCount} / ${v.outCount}</td></tr>`;
+                }).join('')}</tbody></table>`;
+            } else if (tab === 'flows') {
+                $('#analysis-sub').textContent = 'source → relay → sink within 72 h, amount kept within ±30%';
+                view.innerHTML = paths.length ? `<table><thead><tr><th>Path</th><th class="r">Gap</th><th class="r">In</th><th class="r">Out</th><th class="r">Ratio</th><th>Path risk</th></tr></thead><tbody>${paths.map(p =>
+                    `<tr><td><span class="path mono">${esc(p.source_account_id)}<span class="arrow">→</span>${esc(p.intermediary_account_id)}<span class="arrow">→</span>${esc(p.target_account_id)}</span></td>
+                    <td class="r num">${p.gap_hours.toFixed(1)} h</td><td class="r num">${money(p.in_amount)}</td><td class="r num">${money(p.out_amount)}</td><td class="r num">${p.amount_ratio.toFixed(2)}</td>
+                    <td><span class="dot" style="background:${COLORS[p.path_risk_score >= .7912804484367371 ? 'red' : p.path_risk_score >= .55 ? 'yellow' : 'green']}"></span> <span class="num">${p.path_risk_score.toFixed(3)}</span></td></tr>`).join('')}</tbody></table>`
+                    : '<div class="none">No time- and amount-consistent flow paths in this network yet.</div>';
+            } else {
+                $('#analysis-sub').textContent = 'net money out (sources) and in (sinks)';
+                const rows = Math.max(sources.length, sinks.length);
+                const cell = (e, sign) => e ? `<td class="mono">${esc(e[0])}</td><td class="r num">${money(sign * e[1].net)}</td><td><span class="dot" style="background:${COLORS[byId[e[0]].bin]}"></span> <span class="num">${byId[e[0]].score.toFixed(3)}</span></td>` : '<td>–</td><td></td><td></td>';
+                view.innerHTML = rows ? `<table><thead><tr><th>Source</th><th class="r">Net out</th><th>Risk</th><th>Sink</th><th class="r">Net in</th><th>Risk</th></tr></thead><tbody>${Array.from({ length: Math.min(rows, 50) }, (_, i) =>
+                    `<tr>${cell(sources[i], 1)}${cell(sinks[i], -1)}</tr>`).join('')}</tbody></table>`
+                    : '<div class="none">No clear sources or sinks yet.</div>';
+            }
+        }
+        $('#tabs').addEventListener('click', e => {
+            const b = e.target.closest('.tab'); if (!b) return;
+            tab = b.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === b));
+            const d = state.details[selected];
+            renderAnalysis(d || null, d ? roles(d) : null);
+        });
+
+        function select(cid) {
+            const changed = cid !== selected;
+            selected = cid;
+            render(state.details[cid], changed);
+            drawList(new Set(), new Set());
+            if (changed) setTimeout(() => network.fit({ animation: { duration: 400 } }), 600);
+        }
+
+        function drawList(entered, updated) {
+            $('#list').innerHTML = state.top.length ? state.top.map((s, i) => {
+                const prev = ranks[s.component_id];
+                const move = prev == null ? '' : prev > i ? `<span class="move up">▲${prev - i}</span>` : prev < i ? `<span class="move down">▼${i - prev}</span>` : '';
+                const cls = ['row', s.component_id === selected ? 'selected' : '', entered.has(s.component_id) ? 'enter' : '', updated.has(s.component_id) ? 'flash' : ''].join(' ');
+                return `<div class="${cls}" data-id="${esc(s.component_id)}">
+                    <span class="rank num">${i + 1}</span>
+                    <span class="name"><span class="dot" style="background:${COLORS[s.network_bin]}"></span><span class="mono">${esc(s.component_id)}</span>${move}</span>
+                    <span class="score num">${s.network_score.toFixed(3)}</span>
+                    <span class="bar"><i style="width:${(s.network_score * 100).toFixed(1)}%;background:${COLORS[s.network_bin]}"></i></span>
+                    <span class="meta">${fmt(s.account_count)} accounts · ${fmt(s.transaction_count)} txns · ${fmt(s.flow_path_count)} paths · ${money(s.suspicious_value)}</span>
+                </div>`;
+            }).join('') : '<div class="none">No networks yet.</div>';
+            $('#list').querySelectorAll('.row.flash').forEach(r => setTimeout(() => r.classList.remove('flash'), 650));
+        }
+        $('#list').addEventListener('click', e => {
+            const row = e.target.closest('.row'); if (!row) return;
+            $('#follow').checked = false;
+            select(row.dataset.id);
+        });
+
+        function spark(values, color) {
+            if (values.length < 2) return '';
+            const max = Math.max(...values), min = Math.min(...values), span = max - min || 1;
+            const pts = values.map((v, i) => `${(i / (values.length - 1) * 64).toFixed(1)},${(20 - (v - min) / span * 18).toFixed(1)}`).join(' ');
+            return `<svg viewBox="0 0 64 22"><polyline fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" points="${pts}"/></svg>`;
+        }
+
+        function renderKpis() {
+            const st = state.stats || {};
+            const recent = history.slice(-40);
+            let rate = '–';
+            if (recent.length > 1) {
+                const a = recent[0], b = recent[recent.length - 1], secs = (b.t - a.t) / 1000;
+                if (secs > 0) rate = fmt(Math.round((b.scored - a.scored) / secs)) + ' txn/s';
+            }
+            const value = state.top.reduce((sum, s) => sum + (s.suspicious_value || 0), 0);
+            const cards = [
+                ['Transactions scored', fmt(st.transactions_scored), state.batch == null ? '–' : `batch ${fmt(state.batch)} · ${rate}`, '#38bdf8', recent.map(h => h.scored)],
+                ['Red transactions', fmt(st.red_transactions), `${pct(st.red_transactions, st.transactions_scored)} of scored`, '#f43f5e', recent.map(h => h.red)],
+                ['Yellow transactions', fmt(st.yellow_transactions), `${pct(st.yellow_transactions, st.transactions_scored)} of scored`, '#f59e0b', recent.map(h => h.yellow)],
+                ['Accounts in graph', fmt(st.nodes), `${fmt(st.edges)} money flows`, '#8b5cf6', recent.map(h => h.nodes)],
+                ['Networks', fmt(st.networks), 'top 25 shown', '#22c55e', recent.map(h => h.networks)],
+                ['Flow paths', fmt(st.flow_paths), 'source → relay → sink', '#a78bfa', recent.map(h => h.paths)],
+                ['Value in top 25', money(value), 'sum of money moved', '#fb923c', recent.map(h => h.value)]
+            ];
+            $('#kpis').innerHTML = cards.map(([label, v, sub, color, series]) =>
+                `<article class="kpi" style="--k:${color}"><span>${label}</span><b class="num">${v}</b><small>${esc(sub)}</small>${spark(series, color)}</article>`).join('');
+        }
+
+        function setStats(st, batch) {
+            state.stats = st; state.batch = batch;
+            $('#warm').hidden = !st.in_warmup;
+            history.push({
+                t: Date.now(), scored: st.transactions_scored, red: st.red_transactions, yellow: st.yellow_transactions,
+                nodes: st.nodes, networks: st.networks, paths: st.flow_paths, value: state.top.reduce((s, x) => s + (x.suspicious_value || 0), 0)
+            });
+            if (history.length > 200) history.shift();
+            renderKpis();
+        }
+
+        function apply(delta) {
+            ranks = Object.fromEntries(state.top.map((s, i) => [s.component_id, i]));
+            const top = new Set(delta.top.map(s => s.component_id));
+            for (const [gone, into] of delta.merges) if (gone === selected) selected = into;
+            for (const cid of Object.keys(state.details)) if (!top.has(cid)) delete state.details[cid];
+            Object.assign(state.details, delta.details);
+            state.top = delta.top; state.frame = delta.frame;
+            setStats(delta.stats, delta.batch_id);
+            const follow = $('#follow').checked;
+            const target = follow || !top.has(selected) ? (delta.top[0] || {}).component_id : selected;
+            const updated = new Set(Object.keys(delta.details));
+            if (target !== selected) select(target);
+            else if (updated.has(selected)) render(state.details[selected], false);
+            drawList(new Set(delta.entered), updated);
+        }
+
+        function setConn(live, text) {
+            const c = $('#conn');
+            c.className = 'chip' + (live ? ' live' : '');
+            c.innerHTML = `<i></i>${text}`;
+        }
+
+        async function start() {
+            if (source) source.close();
+            const s = await (await fetch('/api/live/state')).json();
+            state = { run_id: s.run_id, frame: s.frame ?? -1, top: s.top || [], details: s.details || {}, stats: null, batch: null };
+            history.length = 0;
+            $('#run').hidden = !s.run_id;
+            $('#run').textContent = s.run_id || '';
+            ranks = {}; selected = null;
+            if (s.stats) setStats(s.stats, s.batch_id); else renderKpis();
+            if (state.top.length) select(state.top[0].component_id); else render(null);
+            drawList(new Set(), new Set());
+            const url = `/api/live/stream?after=${state.frame}` + (s.run_id ? `&run_id=${encodeURIComponent(s.run_id)}` : '');
+            source = new EventSource(url);
+            source.onopen = () => setConn(true, 'Live');
+            source.onerror = () => setConn(false, 'Reconnecting');
+            source.addEventListener('batch', e => apply(JSON.parse(e.data)));
+            source.addEventListener('reset', () => start());
+        }
+        renderKpis();
+        start();
+    </script>
+</body>
+
+</html>

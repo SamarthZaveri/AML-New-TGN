@@ -1,0 +1,40 @@
+{
+  "source_repository": "https://github.com/RN90210/aml_data-engineering2",
+  "source_commit": "0bcb7ff24fc129fdedcec2033acb0d7458b5d29e",
+  "unchanged_files": {
+    "preprocessing/spark_static_pipeline.py": "95df4e6d071767c34a2742f95af32e104a5c87839feeba9fe9e2e68535be7623",
+    "streaming/state/_processor_batch.py": "daf10bcccb0f1cf58ed0d5710e3f626cce13befc058909590a2332cdf472477e",
+    "streaming/state/stateful_account_processor.py": "ff0fd0d7a4f8f618f2cb80aaac2c52668bcab7b643aa3571af7bf1947e1fc4cc",
+    "streaming/state/stateful_edge_processor.py": "994dbb715d898887c67c6befc1579fb2bdada8e85e70ea0e205b84be1a366fce",
+    "streaming/state/stateful_bank_processor.py": "ecf0ca73a270ecb0ff18fafb5ca04af13a0a02a4644257d4d0271de20d0a745c",
+    "streaming/state/stateful_entity_processor.py": "3cae61545d097ae32425b2d8969a8d8c61147ca2e9895997c648a9aa6adf0a1c"
+  },
+  "unchanged_definitions": {
+    "streaming/ingestion/pipeline.py": {
+      "SharedBatchRunner": "ef2d241411acf00ad935c3da7e0091a376b15a11b8180a8ed473e1583d85f0af",
+      "initialize_run": "f88b5c17cd041800c6f92041d0ecf6bab7a83d670081fd75f1ad1422e00ada39",
+      "parse_args": "c650bcc596689789eaaa72e7b776365f131d30b4741df5f22dd8e559292bd90d",
+      "run_pipeline": "1337020c064bf64de888816950c617f039c7e017aa34f327aad732b81f80579a"
+    },
+    "streaming/ingestion/events.py": {
+      "add_transaction_flags": "4e5874b6272c31a9ff1cf21efdb4f9d7758f733555e0002a1349b00a511b5d8e",
+      "enrich_transaction_entities": "b40b8bf86dcebbf00aa0dfe73c6ac3afc98f1d9b9cd83a6d80b22abc1b796784",
+      "add_transaction_rejection_reason": "730bd289d0a97ff419351b49de74f48ba8eae3fd29a37f6f3af0497463326001",
+      "build_account_events": "1db7c09554653929489006351c6ab416c5c48409dd73143ce444e631c606eb76",
+      "load_entity_lookup": "dd4614ca266c0abc8b9d9b8614f9ec33d3f7f4b130c078b717d49323badd3a33",
+      "split_valid_and_rejected_events": "379e370bf1261524863d0449e87e2d62cdb434c2f75a9b423192990d74f2b827"
+    },
+    "streaming/ingestion/audit.py": {
+      "write_audit_batch": "7956c0687fef31b41cd923b2df6fb8709ba94c372c441bab38935d746fc12d31"
+    },
+    "streaming/kafka/connector.py": {
+      "build_spark_session": "4ae73c90668f56d6421f9a80c4c9df31db1f8e0f2dbccd7d7a7788f8aa4d14db",
+      "parse_transaction_stream": "445809f59174dd7bf558900a2d6f1f5739153651695fabff8aa528066f549b4d"
+    },
+    "streaming/operations/packages.py": {
+      "package_batch": "bffbacd2f6ee9e38be93e4d65fc2fe8a64ccec7c8374f853470c272c1968a422",
+      "validate_table_and_count_rows": "bf20d761bfa18db747bd4a6c6ec99baf6fa4138133e9577e6a4f4e66554eca53"
+    }
+  },
+  "definition_digest": "sha256 of normalized source text, independent of Python AST version"
+}

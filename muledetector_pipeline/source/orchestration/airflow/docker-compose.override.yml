@@ -1,0 +1,12 @@
+services:
+  scheduler:
+    networks:
+      - airflow
+      - aml_pipeline
+    volumes:
+      - "${AML_PROJECT_ROOT:?Set AML_PROJECT_ROOT to the absolute repository directory}:/opt/muledetector"
+
+networks:
+  aml_pipeline:
+    external: true
+    name: aml_pipeline_default

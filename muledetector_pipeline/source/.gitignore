@@ -1,0 +1,17 @@
+data/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+*.parquet
+*.pt
+*.csv
+!tests/fixtures/*.csv
+orchestration/airflow/.astro/*
+!orchestration/airflow/.astro/config.yaml
+orchestration/airflow/logs/
+orchestration/airflow/airflow.db
+.DS_Store
+Thumbs.db

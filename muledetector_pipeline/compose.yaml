@@ -1,0 +1,123 @@
+name: aml-handover
+x-airflow-common: &airflow-common
+  image: aml-pipeline-handover:78437bc
+  pull_policy: never
+  environment: &airflow-environment
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:local-demo-password@postgres:5432/airflow
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__CORE__DAGS_FOLDER: /opt/muledetector/orchestration/airflow/dags
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.api_fastapi.auth.managers.simple.simple_auth_manager.SimpleAuthManager
+    AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "true"
+    AIRFLOW__API_AUTH__JWT_SECRET: aml-handover-local-demo-jwt-shared-key
+    AIRFLOW__API__SECRET_KEY: aml-handover-local-demo-api-key
+    AIRFLOW__API__BASE_URL: http://localhost:${AIRFLOW_PORT:-8081}
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-api:8080/execution/
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+    AIRFLOW__CORE__PARALLELISM: "2"
+    AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
+    AML_PROJECT_ROOT_IN_CONTAINER: /opt/muledetector
+    AML_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    PYTHONPATH: /opt/muledetector
+    SPARK_LOCAL_IP: 127.0.0.1
+    SPARK_SUBMIT_OPTS: -Divy.home=/opt/spark-ivy -Divy.default.ivy.user.dir=/opt/spark-ivy
+  volumes:
+    - ./data:/opt/muledetector/data
+    - airflow-logs:/usr/local/airflow/logs
+  depends_on:
+    postgres:
+      condition: service_healthy
+    airflow-init:
+      condition: service_completed_successfully
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    pull_policy: never
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: local-demo-password
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U airflow -d airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  kafka:
+    image: apache/kafka:4.3.1
+    pull_policy: never
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    volumes:
+      - kafka-data:/tmp/kraft-combined-logs
+    healthcheck:
+      test: [CMD-SHELL, "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+
+  airflow-init:
+    <<: *airflow-common
+    command: [airflow, db, migrate]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  airflow-api:
+    <<: *airflow-common
+    command: [airflow, api-server]
+    ports:
+      - "127.0.0.1:${AIRFLOW_PORT:-8081}:8080"
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/v2/monitor/health', timeout=5)"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: [airflow, scheduler]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+      airflow-api:
+        condition: service_healthy
+
+  airflow-dag-processor:
+    <<: *airflow-common
+    command: [airflow, dag-processor]
+
+  airflow-triggerer:
+    <<: *airflow-common
+    command: [airflow, triggerer]
+
+volumes:
+  postgres-data:
+  kafka-data:
+  airflow-logs:

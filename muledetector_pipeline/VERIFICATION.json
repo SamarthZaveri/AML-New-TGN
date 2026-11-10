@@ -1,0 +1,113 @@
+{
+  "kind": "docker_handover_verification",
+  "status": "passed",
+  "date": "2026-11-06",
+  "source_commit": "78437bc2782579ef07bd1f00c6269281d82f647a",
+  "source_files_match_published_export": true,
+  "unpublished_target_isolation_edits_included": false,
+  "source_feature_formulas_changed": false,
+  "fresh_compose_database_and_checkpoints": true,
+  "airflow_dag_state": "success",
+  "docker_archive_load": "passed",
+  "windows_start_script": "passed",
+  "compose_config": "passed",
+  "offline_spark_and_kafka_connector": "passed",
+  "tests": {
+    "passed": 40,
+    "skipped": 1,
+    "skip_reason": "optional Spark lookup-plan test"
+  },
+  "replay_totals": {
+    "kafka_transactions": 1000,
+    "expected_account_events": 2000,
+    "valid_account_events": 2000,
+    "rejected_account_events": 0,
+    "batches": 2,
+    "processing_seconds": 302.374,
+    "ready_model_packages": 2,
+    "skipped_no_valid_event_batches": 0
+  },
+  "reference_run_id": "airflow_replay_20261102T073632",
+  "comparison": {
+    "status": "passed",
+    "comparisons": [
+      {
+        "batch": "batch_id=0",
+        "table": "account_features",
+        "status": "passed",
+        "rows": 772
+      },
+      {
+        "batch": "batch_id=0",
+        "table": "bank_features",
+        "status": "passed",
+        "rows": 429
+      },
+      {
+        "batch": "batch_id=0",
+        "table": "entity_features",
+        "status": "passed",
+        "rows": 755
+      },
+      {
+        "batch": "batch_id=0",
+        "table": "account_to_account_edges",
+        "status": "passed",
+        "rows": 488
+      },
+      {
+        "batch": "batch_id=0",
+        "table": "account_to_bank",
+        "status": "passed",
+        "rows": 772
+      },
+      {
+        "batch": "batch_id=0",
+        "table": "entity_to_account",
+        "status": "passed",
+        "rows": 772
+      },
+      {
+        "batch": "batch_id=1",
+        "table": "account_features",
+        "status": "passed",
+        "rows": 844
+      },
+      {
+        "batch": "batch_id=1",
+        "table": "bank_features",
+        "status": "passed",
+        "rows": 543
+      },
+      {
+        "batch": "batch_id=1",
+        "table": "entity_features",
+        "status": "passed",
+        "rows": 843
+      },
+      {
+        "batch": "batch_id=1",
+        "table": "account_to_account_edges",
+        "status": "passed",
+        "rows": 494
+      },
+      {
+        "batch": "batch_id=1",
+        "table": "account_to_bank",
+        "status": "passed",
+        "rows": 844
+      },
+      {
+        "batch": "batch_id=1",
+        "table": "entity_to_account",
+        "status": "passed",
+        "rows": 844
+      }
+    ]
+  },
+  "limitations": [
+    "Windows Intel/AMD handover; prebuilt images are linux/amd64.",
+    "No model training, scoring or leakage remediation was added.",
+    "A separate physical laptop has not been tested."
+  ]
+}

@@ -1,0 +1,13 @@
+*
+!config.py
+!stage2/
+!stage2/**
+!network/
+!network/**
+!inference/*.py
+!inference/model/best.pt
+!inference/model/*.json
+!muledetector_pipeline/source/streaming/__init__.py
+!muledetector_pipeline/source/streaming/operations/
+!muledetector_pipeline/source/streaming/operations/**
+**/__pycache__

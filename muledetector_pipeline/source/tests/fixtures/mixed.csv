@@ -1,0 +1,4 @@
+Timestamp,From Bank,Account,To Bank,Account.1,Amount Received,Receiving Currency,Amount Paid,Payment Currency,Payment Format,Is Laundering
+2022/09/01 00:30,0,80011CE70,0,80011CE70,100.0,US Dollar,100.0,US Dollar,Reinvestment,0
+2022/09/01 00:31,0,80011CE70,0,80011CE70,200.0,US Dollar,,US Dollar,Reinvestment,0
+2022/09/01 00:32,0,80011CE70,0,80011CE70,300.0,US Dollar,300.0,US Dollar,Reinvestment,0

@@ -1,0 +1,6 @@
+{
+  "replay_row_count": 1000,
+  "max_offsets_per_trigger": 500,
+  "prepared_replay_path": "/opt/muledetector/data/streaming/replay_windows/final_demo_replay_1000.csv",
+  "verify_features": false
+}

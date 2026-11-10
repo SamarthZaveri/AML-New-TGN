@@ -1,0 +1,83 @@
+# Override for the handover stack. Always used together with the pipeline file:
+#   docker compose -f muledetector_pipeline/compose.yaml -f inference/compose.yaml ...
+# Relative paths below resolve from muledetector_pipeline/ (the first file), as Compose requires.
+
+# LOOKUP is relative to the pipeline data/ folder; both the pipeline and the consumer read the same file.
+x-lookup: &lookup
+  AML_ACCOUNT_ENTITY_LOOKUP_PATH: /opt/muledetector/data/${LOOKUP:-processed/account_entity_lookup.parquet}
+
+# Spark checkpoints + RocksDB state live in a Docker volume (Linux filesystem) instead of the
+# Windows bind mount, which is far slower for many small writes. Packages stay on the bind mount.
+x-checkpoints: &checkpoints
+  - pipeline-checkpoints:/opt/muledetector/data/checkpoints
+
+services:
+  # New volumes are root-owned; Airflow runs as astro (uid 50000), so hand the volume over first.
+  checkpoints-init:
+    image: aml-pipeline-handover:78437bc
+    pull_policy: never
+    user: root
+    entrypoint: [chown, -R, "50000:0", /opt/muledetector/data/checkpoints]
+    volumes: *checkpoints
+    restart: "no"
+
+  airflow-init:
+    depends_on:
+      checkpoints-init:
+        condition: service_completed_successfully
+
+  # The replay's entity lookup must match the dataset being replayed (HI-Small needs its own).
+  airflow-api:
+    environment: *lookup
+    volumes: *checkpoints
+  airflow-scheduler:
+    environment: *lookup
+    volumes: *checkpoints
+  airflow-dag-processor:
+    environment: *lookup
+    volumes: *checkpoints
+  airflow-triggerer:
+    environment: *lookup
+    volumes: *checkpoints
+
+  inference:
+    build:
+      context: ..
+      dockerfile: inference/Dockerfile
+    image: mule-inference:seed42
+    command:
+      - python
+      - -m
+      - inference.consumer
+      - --pipeline-data=/pipeline/data
+      - --pipeline-source=/app/pipeline_source
+      - --entity-lookup=/pipeline/data/${LOOKUP:-processed/account_entity_lookup.parquet}
+      - --output-root=/app/inference/outputs
+      - --watch
+      - --warmup-records=${WARMUP_RECORDS:-500000}
+      - --ui-chunk=${UI_CHUNK:-1000}
+      - --min-seconds-per-frame=${MIN_SECONDS_PER_FRAME:-0}
+    volumes:
+      - ./data:/pipeline/data:ro
+      - ../inference/outputs:/app/inference/outputs
+      # Code from the project folder, so changes apply on restart without rebuilding the image.
+      - ../inference/live_network.py:/app/inference/live_network.py:ro
+      - ../inference/consumer.py:/app/inference/consumer.py:ro
+    restart: unless-stopped
+
+  network-ui:
+    image: mule-inference:seed42
+    pull_policy: never
+    command: [python, -m, network.server, --live-root=/app/inference/outputs, --host=0.0.0.0, --port=8765]
+    ports:
+      - "127.0.0.1:${NETWORK_UI_PORT:-8765}:8765"
+    volumes:
+      - ../inference/outputs:/app/inference/outputs:ro
+      # UI served from the project folder: edits show on a browser refresh, no rebuild.
+      - ../network:/app/network:ro
+    depends_on:
+      - inference
+    restart: unless-stopped
+
+volumes:
+  pipeline-checkpoints:
