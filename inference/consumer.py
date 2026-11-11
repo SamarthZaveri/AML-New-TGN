@@ -231,7 +231,13 @@ class Consumer:
             L['warm'][ids] = bool(in_warmup[hi-1])
             L['seen'][ids] = True
             touched.update(dict.fromkeys(ids.tolist()))
-        scores = np.concatenate(txn_scores)
+        self.cursor['events_processed'] += len(ev)
+        if in_warmup.all():
+            return  # warm-up: memory only; nothing is written, scored for output or shown
+        keep = ~in_warmup
+        scores = np.concatenate(txn_scores)[keep]
+        ev = ev[keep]
+        in_warmup = in_warmup[keep]
         tx = ev[['event_idx', 'timestamp_unix', 'sender_account_id', 'receiver_account_id', 'amount_paid',
                  'amount_received']].copy()
         tx.insert(0, 'batch_id', batch_id)
@@ -254,7 +260,6 @@ class Consumer:
             self.network.write_delta(self.network.process_batch(batch_id, chunk, {k: latest[k] for k in ends}))
             if a.min_seconds_per_frame > 0:
                 time.sleep(max(0.0, a.min_seconds_per_frame - (time.monotonic() - started)))
-        self.cursor['events_processed'] += len(ev)
 
     @torch.no_grad()
     def rescore_all(self, batch_id):
@@ -362,11 +367,19 @@ class Consumer:
                 if since_save >= a.state_every:
                     self.save_state()
                     since_save = 0
-                print(f'Batch {k}: {self.cursor["events_processed"]:,} transactions scored; '
-                      f'{self.network.stats()["networks"]:,} networks', flush=True)
+                done = self.cursor['events_processed']
+                if done <= a.warmup_records:
+                    print(f'Batch {k}: warm-up, memory only ({done:,}/{a.warmup_records:,})', flush=True)
+                else:
+                    print(f'Batch {k}: {done:,} transactions processed; '
+                          f'{self.network.stats()["networks"]:,} networks', flush=True)
                 progressed = True
             if not progressed:
                 if report.exists() or not a.follow:
+                    break
+                # A failed run never gets a report; move on once a newer run has started.
+                if not a.run_id and newest_run(self.updates_root) != run_id:
+                    print(f'Run {run_id} has no more batches and a newer run exists; switching', flush=True)
                     break
                 time.sleep(a.poll_seconds)
         self.save_state()

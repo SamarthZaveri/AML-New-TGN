@@ -24,6 +24,7 @@ class LiveConfig:
     account_yellow: float = 0.55
     transaction_red: float = 0.9086251258850098
     transaction_yellow: float = 0.55
+    entry_threshold: float = 0.55  # on transaction score x sqrt(sender score x receiver score)
     max_flow_gap_hours: float = 72.0
     amount_ratio_low: float = 0.70
     amount_ratio_high: float = 1.30
@@ -124,7 +125,8 @@ class LiveNetwork:
                 self.totals[tbin + '_transactions'] += 1
             s, r = row.sender_account_id, row.receiver_account_id
             ss, rs = account_scores[s], account_scores[r]
-            if tbin == 'green' and self._account_bin(ss) == 'green' and self._account_bin(rs) == 'green':
+            # Entry combines all three scores; a low-risk transaction or account on either side keeps it out.
+            if row.transaction_risk_score * math.sqrt(ss * rs) < c.entry_threshold:
                 continue
             self.totals['transactions_included'] += 1
             warm = bool(row.in_warmup)
